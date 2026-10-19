@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saathi Caregiver Dashboard</title>
+<meta name="description" content="Caregiver dashboard for Saathi, an AI agent that calls elders daily to check their medicines.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='10' width='26' height='12' rx='6' fill='%23245b8f'/%3E%3Crect x='16' y='10' width='13' height='12' rx='0' fill='%232e7a58'/%3E%3Crect x='16' y='10' width='13' height='12' rx='6' fill='%232e7a58'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="10" width="26" height="12" rx="6" fill="var(--accent)"/><path d="M16 10h7a6 6 0 0 1 0 12h-7z" fill="var(--taken)"/></svg>
+    <span class="brand-name">Saathi</span>
+  </div>
+  <div class="who"><strong id="pt-name">Loading…</strong><span class="muted small" id="pt-meta"></span></div>
+  <div class="spacer"></div>
+  <span class="status-chip" id="llm-chip" title="Language understanding engine">Rule engine</span>
+  <a class="btn" href="/phone" target="saathi-phone" id="open-phone">Open elder's phone</a>
+  <button class="btn quiet" id="reset-btn" title="Delete all calls and restore the demo patient">Reset demo</button>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" aria-selected="true" data-view="today">Today</button>
+  <button role="tab" aria-selected="false" data-view="calls">Calls &amp; evidence</button>
+  <button role="tab" aria-selected="false" data-view="approvals">Approvals<span class="count" id="ap-count"></span></button>
+  <button role="tab" aria-selected="false" data-view="tests">Test cases</button>
+  <button role="tab" aria-selected="false" data-view="messages">Messages sent</button>
+  <button role="tab" aria-selected="false" data-view="setup">Patient setup</button>
+</nav>
+
+<main>
+  <!-- TODAY -->
+  <section class="view active" id="view-today" role="tabpanel">
+    <div class="headline">
+      <h1 id="headline">Checking today's medicines…</h1>
+      <p class="muted" id="subline"></p>
+    </div>
+    <div class="today-grid">
+      <div>
+        <div class="panel live hidden" id="live-panel" aria-live="polite"></div>
+        <div class="strips" id="strips"></div>
+        <div class="panel" style="margin-top:1rem">
+          <div class="panel-head"><h2>This week</h2><span class="muted small" id="adherence"></span></div>
+          <div class="organiser" id="organiser"></div>
+          <div class="legend">
+            <span><i style="background:var(--taken-bg)"></i>All taken</span>
+            <span><i style="background:var(--missed-bg)"></i>Missed</span>
+            <span><i style="background:var(--unsure-bg)"></i>Unconfirmed or mixed</span>
+            <span><i></i>No record</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h2>Needs your attention</h2><span class="muted small" id="alert-count"></span></div>
+          <div class="alerts" id="alerts"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Recent calls</h2></div>
+          <div id="recent"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALLS -->
+  <section class="view" id="view-calls" role="tabpanel">
+    <div class="panel">
+      <div class="panel-head"><h2>Every call, with the evidence behind each decision</h2>
+        <span class="muted small">Open a call to see the transcript and the agent's step-by-step trace with source records.</span></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Call</th><th>When</th><th>Slot</th><th>Attempts</th><th>Result</th><th>Summary</th></tr></thead>
+        <tbody id="calls-body"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- APPROVALS -->
+  <section class="view" id="view-approvals" role="tabpanel">
+    <div class="panel">
+      <div class="panel-head"><h2>Actions waiting for your approval</h2>
+        <span class="muted small">Saathi never changes a prescription or shares health details outside the family on its own.</span></div>
+      <div id="approvals"></div>
+    </div>
+  </section>
+
+  <!-- TESTS -->
+  <section class="view" id="view-tests" role="tabpanel">
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2>Test cases</h2>
+          <p class="muted small" style="margin-top:.3rem">Each case runs the real agent on its own synthetic test patient and checks the stored records, not just the reply.</p></div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="btn primary" id="run-tests">Run all test cases</button>
+          <a class="btn" id="dl-report" href="/api/tests/latest/report.md">Download report</a>
+        </div>
+      </div>
+      <p class="muted small" id="tests-meta"></p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Case</th><th>Input</th><th>Expected</th><th>Actual result</th><th>Evidence</th></tr></thead>
+        <tbody id="tests-body"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- MESSAGES -->
+  <section class="view" id="view-messages" role="tabpanel">
+    <div class="panel">
+      <div class="panel-head"><h2>Messages sent to family and doctor</h2>
+        <span class="muted small">SMS and email are simulated. Telegram messages are real when a bot token is configured.</span></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Sent</th><th>Channel</th><th>To</th><th>Message</th><th>Status</th></tr></thead>
+        <tbody id="msgs-body"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section class="view" id="view-setup" role="tabpanel">
+    <div class="panel">
+      <div class="panel-head"><h2>Calling and consent</h2></div>
+      <div class="form-row"><label for="sw-consent">Consent to receive calls</label>
+        <span class="switch"><input type="checkbox" id="sw-consent"><span></span></span><span class="muted small" id="consent-meta"></span></div>
+      <div class="form-row"><label for="sw-auto">Call automatically at medicine times</label>
+        <span class="switch"><input type="checkbox" id="sw-auto"><span></span></span><span class="muted small">Morning and evening calls start on their own at the times below.</span></div>
+      <div class="form-row"><label for="sel-lang">Call language</label>
+        <select id="sel-lang"><option value="en">English</option><option value="hi">हिन्दी (Hindi)</option></select>
+        <span class="muted small">Saathi switches automatically if the elder replies in the other language.</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Medicine schedule</h2><span class="muted small">Source records the agent reads before every call</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Record</th><th>Medicine</th><th>Dose</th><th>When</th><th>Notes</th><th>Status</th></tr></thead><tbody id="meds-body"></tbody></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Family contacts</h2><span class="muted small">Add a Telegram chat ID to get real alerts on your phone</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Record</th><th>Name</th><th>Phone</th><th>Gets</th><th>Telegram chat ID</th></tr></thead><tbody id="contacts-body"></tbody></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Care rules</h2><span class="muted small">The agent cites these rule IDs in its trace</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Rule</th><th>Setting</th><th>Value</th><th>What it does</th></tr></thead><tbody id="rules-body"></tbody></table></div>
+    </div>
+  </section>
+</main>
+
+<div class="drawer-backdrop hidden" id="drawer-bg"></div>
+<aside class="drawer hidden" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+  <header>
+    <div><h2 id="drawer-title">Call</h2><p class="muted small" id="drawer-meta"></p></div>
+    <button class="btn" id="drawer-close">Close</button>
+  </header>
+  <div class="body">
+    <div>
+      <div class="panel"><h3 style="margin-bottom:.75rem">Conversation</h3><div class="transcript" id="d-transcript"></div></div>
+      <div class="panel"><h3 style="margin-bottom:.5rem">What was recorded</h3><div id="d-records"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Agent trace</h3><span class="muted small" id="d-trace-count"></span></div>
+      <div class="stage-filter" id="d-filter"></div>
+      <ol class="timeline" id="d-trace"></ol>
+    </div>
+  </div>
+</aside>
+
+<script src="/static/dashboard.js"></script>
+</body>
+</html>

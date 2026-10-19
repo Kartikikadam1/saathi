@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saathi Elder Phone</title>
+<meta name="description" content="Simulated phone of the elder: receive Saathi's medicine check-in call and reply by voice or text.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='10' width='26' height='12' rx='6' fill='%23245b8f'/%3E%3Crect x='16' y='10' width='13' height='12' rx='6' fill='%232e7a58'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="phone-page">
+  <div class="phone-side">
+    <h1>Elder's phone</h1>
+    <p class="muted">This screen stands in for the elder's phone. When Saathi calls, answer and reply by speaking (Chrome or Edge) or by typing.</p>
+    <p class="muted">Start a call from the <a href="/" target="saathi-dashboard">caregiver dashboard</a> with “Call now”. Keep both open side by side to watch the agent log, alert and verify in real time.</p>
+  </div>
+
+  <div class="phone" aria-label="Simulated phone">
+    <div class="screen">
+      <div class="sbar"><span id="sb-time"></span><span>Saathi</span></div>
+
+      <div class="ph-view idle active" id="v-idle">
+        <div class="clock" id="clock"></div>
+        <div class="date" id="date"></div>
+        <p class="next" id="next">Saathi will call at medicine time.</p>
+      </div>
+
+      <div class="ph-view incoming ringing" id="v-ring">
+        <div>
+          <div class="caller-avatar" aria-hidden="true">S</div>
+          <h2>Saathi</h2>
+          <p class="sub" id="ring-sub">Medicine check-in</p>
+          <div class="langs" role="group" aria-label="Call language">
+            <button data-lang="en" aria-pressed="true">English</button>
+            <button data-lang="hi" aria-pressed="false">हिन्दी</button>
+          </div>
+          <p class="muted small" id="ring-left" style="margin-top:.8rem"></p>
+        </div>
+        <div class="call-actions">
+          <div><button class="round decline" id="btn-decline" aria-label="Decline">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08A.996.996 0 0 1 0 12.37c0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.66c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28a11.27 11.27 0 0 0-2.67-1.85.996.996 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg></button>
+            <span class="round-label">Decline</span></div>
+          <div><button class="round answer" id="btn-answer" aria-label="Answer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.05 15.05 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg></button>
+            <span class="round-label">Answer</span></div>
+        </div>
+      </div>
+
+      <div class="ph-view incall" id="v-call">
+        <div class="incall-head"><strong>Saathi</strong><span class="muted small" id="call-timer">00:00</span></div>
+        <div class="ph-transcript" id="ph-transcript" aria-live="polite"></div>
+        <div class="mic-row">
+          <button class="mic" id="btn-mic" aria-label="Speak your answer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+          </button>
+          <div class="heard" id="heard">Tap the microphone and speak, or type below.</div>
+        </div>
+        <form class="type-row" id="type-form">
+          <input type="text" id="type-input" placeholder="Type your answer" autocomplete="off" aria-label="Type your answer">
+          <button class="btn primary sm" type="submit">Send</button>
+        </form>
+        <div class="chips" id="chips" aria-label="Quick replies"></div>
+        <div class="call-over" id="call-over"><strong>Call ended</strong><span class="muted" id="over-sub"></span><button class="btn" id="btn-done">Done</button></div>
+        <div class="incall-foot"><button class="round hang" id="btn-hang" aria-label="Hang up">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08A.996.996 0 0 1 0 12.37c0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.66c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28a11.27 11.27 0 0 0-2.67-1.85.996.996 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg></button></div>
+      </div>
+
+      <div class="ph-view ended" id="v-ended">
+        <h2>Call ended</h2>
+        <p class="muted" id="ended-sub"></p>
+        <button class="btn" id="btn-back">Done</button>
+      </div>
+
+      <div class="sound-gate" id="sound-gate"><button class="btn primary" id="btn-sound">Turn on sound and voice</button></div>
+    </div>
+  </div>
+
+  <div class="phone-side right">
+    <h1>Try these</h1>
+    <p class="muted">“Yes, I took them.” · “I'm feeling dizzy.” · “Should I double the dose?” · “मैंने दवा ले ली।” · or let it ring to see the retries and the family alert.</p>
+  </div>
+
+<script src="/static/phone.js"></script>
+</body>
+</html>

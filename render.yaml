@@ -1,0 +1,25 @@
+# One-click deploy on Render (free plan): New → Blueprint → select this repo.
+services:
+  - type: web
+    name: saathi-med-checkin
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # Single worker: the agent's scheduler and per-call locks live in-process.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: APP_TIMEZONE
+        value: Asia/Kolkata
+      - key: RING_TIMEOUT_S
+        value: "25"
+      - key: RETRY_INTERVAL_S
+        value: "15"
